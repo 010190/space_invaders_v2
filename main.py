@@ -1,10 +1,9 @@
-import sys
-import random
-import time
-from rembg import remove
+import pygame, sys
 from PIL import Image
-import pygame
+import random
+from button import Button
 
+pygame.init()
 white = (255, 255, 255)
 green = (0, 255, 0)
 blue = (0, 0, 128)
@@ -13,31 +12,17 @@ HEIGHT = 480
 SPRITE_HEIGHT = 40
 SPRITE_WIDTH = 40
 pygame.init()
-
-""""Code responsible for image processing"""
-# Image.open(r"bg.jpg").resize((640, 480)).save("bg.jpg")
-# Image.open(r"spaceship.png").resize((40, 40)).save("spaceship.png")
-# Image.open(r"alien.png").resize((40, 40)).save("alien.png")
-#
-# for image in ["alien.png", "bullet.png", "spaceship.png"]:
-#     img = Image.open(image)
-#     rgba = img.convert("RGBA")
-#     datas = rgba.getdata()
-#
-#     newData = []
-#     for item in datas:
-#         if item[0] == 41 and item[1] == 41 and item[2] == 41:  # finding black colour by its RGB value
-#             # storing a transparent value when we find a black colour
-#             newData.append((255, 255, 255, 0))
-#         else:
-#             newData.append(item)  # other colours remain unchanged
-#
-#     rgba.putdata(newData)
-#     rgba.save(f"{image}", "PNG")
-#     print("done")
+pygame.display.set_caption("Space Invaders")
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Menu")
+
+
+
 clock = pygame.time.Clock()
+
+start_button = pygame.image.load("start_btn.png").convert_alpha()
+exit_button = pygame.image.load("exit_btn.png").convert_alpha()
 
 player = pygame.image.load("spaceship.png").convert_alpha()
 background = pygame.image.load("bg.jpg").convert()
@@ -130,7 +115,16 @@ for y in range(2):
         o.starting_pos = 75 + (x * 50)
         objects.append(o)
 
-while True:
+
+def main_menu():
+    pygame.display.set_caption("Menu")
+
+    MENU_MOUSE_POS = pygame.mouse.get_pos()
+
+
+def game_functionality():
+    global n
+    global bullet_list
     pygame.event.pump()
     n += 1
     write(text=f"Points: {p.points}", location=(500, 400))
@@ -166,9 +160,6 @@ while True:
                     pass
                 pygame.display.update()
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            sys.exit()
     screen.blit(p.image, p.pos)
     if n % 20 == 0:
         for o in objects:
@@ -213,5 +204,61 @@ while True:
     if len(objects) == 0:
         write(text="YOU WON!", location=(250, 200))
 
-    pygame.display.update()
-    clock.tick(60)
+
+def get_font(size):  # Returns Press-Start-2P in the desired size
+    return pygame.font.Font("CourierPrime-Regular.ttf", size)
+
+
+def play():
+    screen.blit(background, (0,0))
+    while True:
+
+        game_functionality()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        pygame.display.update()
+        clock.tick(60)
+
+
+
+
+def main_menu():
+    while True:
+        screen.blit(background, (0, 0))
+
+        MENU_MOUSE_POS = pygame.mouse.get_pos()
+
+        MENU_TEXT = get_font(100).render("MAIN MENU", True, "#b68f40")
+        MENU_RECT = MENU_TEXT.get_rect(center=(320, 100))
+
+        PLAY_BUTTON = Button(image=pygame.image.load("assets/Play Rect.png"), pos=(320, 250),
+                             text_input="PLAY", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+
+        QUIT_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(320, 380),
+                             text_input="QUIT", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+
+        screen.blit(MENU_TEXT, MENU_RECT)
+
+        for button in [PLAY_BUTTON, QUIT_BUTTON]:
+            button.changeColor(MENU_MOUSE_POS)
+            button.update(screen)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if PLAY_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    play()
+
+                if QUIT_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    pygame.quit()
+                    sys.exit()
+
+        pygame.display.update()
+
+
+main_menu()
