@@ -58,6 +58,7 @@ class GameObject:
         self.pos = image.get_rect().move(x_cord, y_cord)
         self.lives = 3
         self.points = 0
+        self.starting_pos = 0
 
     def move(self, up=False, down=False, left=False, right=False):
         screen.blit(background, self.pos, self.pos)
@@ -123,12 +124,14 @@ def update(location):
 objects = []
 p = GameObject(player, 300, 440, 3)
 n = 0
-for y in range(1):
-    for x in range(3):
+for y in range(2):
+    for x in range(10):
         o = GameObject(entity, 75 + (x * 50), y * 50, 50)
+        o.starting_pos = 75 + (x * 50)
         objects.append(o)
 
 while True:
+    pygame.event.pump()
     n += 1
     write(text=f"Points: {p.points}", location=(500, 400))
     write(text=f"Lives: {p.lives}", location=(500, 425))
@@ -157,7 +160,10 @@ while True:
                 screen.blit(background, bullet_obj.pos, bullet_obj.pos)
                 screen.blit(background, alien.pos, alien.pos)
                 objects.remove(alien)
-                bullet_list.remove(bullet_obj)
+                try:
+                    bullet_list.remove(bullet_obj)
+                except ValueError:
+                    pass
                 pygame.display.update()
 
     for event in pygame.event.get():
@@ -165,15 +171,14 @@ while True:
             sys.exit()
     screen.blit(p.image, p.pos)
     if n % 20 == 0:
-        if objects[0].pos.right == 165:
-            for o in objects:
-                o.move(left=True)
-                screen.blit(o.image, o.pos)
-
-        elif objects[0].pos.right == 115:
-            for o in objects:
+        for o in objects:
+            if o.pos[0] == o.starting_pos:
                 o.move(right=True)
-                screen.blit(o.image, o.pos)
+            else:
+                o.move(left=True)
+
+            screen.blit(o.image, o.pos)
+
         alien_choice = random.choice(objects)
         alien_bullet = make_bullet_alien(alien_choice)
         if alien_bullet is not None:
@@ -189,10 +194,16 @@ while True:
                         f"hit player bullet, {p.pos.top, p.pos.right},{alien_bullet_obj.pos.top, alien_bullet_obj.pos.right} ")
                     screen.blit(background, alien_bullet_obj.pos, alien_bullet_obj.pos)
                     screen.blit(background, p.pos, p.pos)
-                    alien_bullet.remove(alien_bullet_obj)
+                    try:
+                        alien_bullet.remove(alien_bullet_obj)
+                    except ValueError:
+                        pass
                     p.lives -= 1
                     print(p.lives)
                     pygame.display.update()
+    elif n % 400 == 0:
+        for o in objects:
+            o.move(down=True)
     else:
         for o in objects:
             screen.blit(o.image, o.pos)
